@@ -24,6 +24,7 @@ package nl.dtls.fairdatapoint.database.mongo.migration.development.resource.data
 
 import nl.dtls.fairdatapoint.database.mongo.migration.development.shape.data.ShapeFixtures;
 import nl.dtls.fairdatapoint.entity.resource.*;
+import nl.dtls.fairdatapoint.vocabulary.FDP;
 import nl.dtls.fairdatapoint.vocabulary.R3D;
 import org.eclipse.rdf4j.model.vocabulary.DCAT;
 import org.springframework.stereotype.Service;
@@ -33,7 +34,7 @@ import java.util.List;
 @Service
 public class ResourceDefinitionFixtures {
 
-    public static String REPOSITORY_DEFINITION_UUID = "77aaad6a-0136-4c6e-88b9-07ffccd0ee4c";
+    public static String FDP_DEFINITION_UUID = "77aaad6a-0136-4c6e-88b9-07ffccd0ee4c";
 
     public static String CATALOG_DEFINITION_UUID = "a0949e72-4466-4d53-8900-9436d1049a4b";
 
@@ -43,15 +44,18 @@ public class ResourceDefinitionFixtures {
 
     public static String ONTOLOGY_DEFINITION_UUID = "4bc19f45-845d-48d6-ade7-ac2664563f60";
 
-    public ResourceDefinition repositoryDefinition() {
+    public ResourceDefinition fdpDefinition() {
         return new ResourceDefinition(
-                REPOSITORY_DEFINITION_UUID,
-                "Repository",
+                FDP_DEFINITION_UUID,
+                "FAIR Data Point",
                 "",
-                List.of(ShapeFixtures.RESOURCE_SHAPE_UUID, ShapeFixtures.REPOSITORY_SHAPE_UUID),
+                List.of(ShapeFixtures.RESOURCE_SHAPE_UUID,
+                        ShapeFixtures.DATASERVICE_SHAPE_UUID,
+                        ShapeFixtures.METADATASERVICE_SHAPE_UUID,
+                        ShapeFixtures.FDP_SHAPE_UUID),
                 List.of(new ResourceDefinitionChild(
                         CATALOG_DEFINITION_UUID,
-                        R3D.DATACATALOG.stringValue(),
+                        FDP.METADATACATALOG.stringValue(),
                         new ResourceDefinitionChildListView(
                                 "Catalogs",
                                 "http://www.w3.org/ns/dcat#themeTaxonomy",

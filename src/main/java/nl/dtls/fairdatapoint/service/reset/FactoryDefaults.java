@@ -37,25 +37,17 @@ import nl.dtls.fairdatapoint.service.shape.ShapeShaclUtils;
 import nl.dtls.fairdatapoint.vocabulary.DATACITE;
 import nl.dtls.fairdatapoint.vocabulary.FDP;
 import nl.dtls.fairdatapoint.vocabulary.R3D;
-import nl.dtls.fairdatapoint.vocabulary.Sio;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.bson.BasicBSONObject;
 import org.bson.Document;
 import org.bson.types.BasicBSONList;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
-import org.eclipse.rdf4j.model.vocabulary.DCTERMS;
-import org.eclipse.rdf4j.model.vocabulary.FOAF;
-import org.eclipse.rdf4j.model.vocabulary.RDF;
-import org.eclipse.rdf4j.model.vocabulary.RDFS;
+import org.eclipse.rdf4j.model.vocabulary.*;
 
-import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
-import static java.lang.String.format;
 import static nl.dtls.fairdatapoint.util.ValueFactoryHelper.*;
 
 public class FactoryDefaults {
@@ -114,6 +106,12 @@ public class FactoryDefaults {
 
     private static final String SHAPE_REPOSITORY_UUID = "a92958ab-a414-47e6-8e17-68ba96ba3a2b";
 
+    private static final String SHAPE_FDP_UUID = "a92958ab-a414-47e6-8e17-68ba96ba3a2b";
+
+    private static final String SHAPE_DATASERVICE_UUID = "89d94c1b-f6ff-4545-ba9b-120b2d1921d0";
+
+    private static final String SHAPE_METADATASERVICE_UUID = "6f7a5a76-6185-4bd0-9fe9-62ecc90c9bad";
+
     private static final String SHAPE_CATALOG_UUID = "2aa7ba63-d27a-4c0e-bfa6-3a4e250f4660";
 
     private static final String SHAPE_DATASET_UUID = "866d7fb8-5982-4215-9c7c-18d0ed1bd5f3";
@@ -121,23 +119,25 @@ public class FactoryDefaults {
     private static final String SHAPE_DISTRIBUTION_UUID = "ebacbf83-cd4f-4113-8738-d73c0735b0ab";
 
     //== RESOURCE DEFINITIONS
-    // Changes: Migration_0002_CustomMetamodel, Migration_0004_ResourceDefinition
-    public static final ResourceDefinition RESOURCE_DEFINITION_REPOSITORY = ResourceDefinition.builder()
+    // Changes: Migration_0002_CustomMetamodel, Migration_0004_ResourceDefinition, Migration_0010_ComplyFDPO
+    public static final ResourceDefinition RESOURCE_DEFINITION_FDP = ResourceDefinition.builder()
             .uuid("77aaad6a-0136-4c6e-88b9-07ffccd0ee4c")
-            .name("Repository")
+            .name("FAIR Data Point")
             .urlPrefix("")
             .shapeUuids(List.of(
                     SHAPE_RESOURCE_UUID,
-                    SHAPE_REPOSITORY_UUID
+                    SHAPE_DATASERVICE_UUID,
+                    SHAPE_METADATASERVICE_UUID,
+                    SHAPE_FDP_UUID
             ))
             .children(List.of(
                     ResourceDefinitionChild.builder()
                             .resourceDefinitionUuid("a0949e72-4466-4d53-8900-9436d1049a4b")
-                            .relationUri("http://www.re3data.org/schema/3-0#dataCatalog")
+                            .relationUri(FDP.METADATACATALOG.stringValue())
                             .listView(
                                     ResourceDefinitionChildListView.builder()
                                             .title("Catalogs")
-                                            .tagsUri("http://www.w3.org/ns/dcat#themeTaxonomy")
+                                            .tagsUri(DCAT.THEME_TAXONOMY.stringValue())
                                             .metadata(List.of())
                                             .build()
                             )
@@ -161,7 +161,7 @@ public class FactoryDefaults {
                             .listView(
                                     ResourceDefinitionChildListView.builder()
                                             .title("Datasets")
-                                            .tagsUri("http://www.w3.org/ns/dcat#theme")
+                                            .tagsUri(DCAT.THEME.stringValue())
                                             .metadata(List.of())
                                             .build()
                             )
@@ -189,7 +189,7 @@ public class FactoryDefaults {
                                             .metadata(List.of(
                                                     new ResourceDefinitionChildListViewMetadata(
                                                             "Media Type",
-                                                            "http://www.w3.org/ns/dcat#mediaType"
+                                                            DCAT.MEDIA_TYPE.stringValue()
                                                     )
                                             ))
                                             .build()
@@ -211,17 +211,17 @@ public class FactoryDefaults {
             .externalLinks(List.of(
                     new ResourceDefinitionLink(
                             "Access online",
-                            "http://www.w3.org/ns/dcat#accessURL"
+                            DCAT.ACCESS_URL.stringValue()
                     ),
                     new ResourceDefinitionLink(
                             "Download",
-                            "http://www.w3.org/ns/dcat#downloadURL"
+                            DCAT.DOWNLOAD_URL.stringValue()
                     )
             ))
             .build();
 
     //== SHAPES
-    //== Changes: Migration_0003_ShapeDefinition, Migration_0005_UpdateShapeDefinition, Migration_0006_ShapesSharing
+    //== Changes: Migration_0003_ShapeDefinition, Migration_0005_UpdateShapeDefinition, Migration_0006_ShapesSharing, Migration_0010_ComplyFDPO
     public static Shape shapeResource() throws Exception {
         String definition = loadShape("shape-resource.ttl");
         return Shape.builder()
@@ -234,11 +234,35 @@ public class FactoryDefaults {
                 .build();
     }
 
-    public static Shape shapeRepository() throws Exception {
-        String definition = loadShape("shape-repository.ttl");
+    public static Shape shapeFDP() throws Exception {
+        String definition = loadShape("shape-fdp.ttl");
         return Shape.builder()
-                .uuid(SHAPE_REPOSITORY_UUID)
-                .name("Repository")
+                .uuid(SHAPE_FDP_UUID)
+                .name("FAIR Data Point")
+                .type(ShapeType.INTERNAL)
+                .published(false)
+                .definition(definition)
+                .targetClasses(ShapeShaclUtils.extractTargetClasses(definition))
+                .build();
+    }
+
+    public static Shape shapeDataService() throws Exception {
+        String definition = loadShape("shape-data-service.ttl");
+        return Shape.builder()
+                .uuid(SHAPE_DATASERVICE_UUID)
+                .name("Data Service")
+                .type(ShapeType.INTERNAL)
+                .published(false)
+                .definition(definition)
+                .targetClasses(ShapeShaclUtils.extractTargetClasses(definition))
+                .build();
+    }
+
+    public static Shape shapeMetadataService() throws Exception {
+        String definition = loadShape("shape-metadata-service.ttl");
+        return Shape.builder()
+                .uuid(SHAPE_METADATASERVICE_UUID)
+                .name("Metadata Service")
                 .type(ShapeType.INTERNAL)
                 .published(false)
                 .definition(definition)
@@ -358,6 +382,39 @@ public class FactoryDefaults {
         FactoryDefaults.add(s, identifierIri, DCTERMS.IDENTIFIER, l(persistentUrl), baseUrl);
         // Repository Identifier
         FactoryDefaults.add(s, R3D.REPOSITORYIDENTIFIER, identifierIri, baseUrl);
+        // Access Rights
+        IRI arIri = i(persistentUrl + "#accessRights");
+        FactoryDefaults.add(s, DCTERMS.ACCESS_RIGHTS, arIri, baseUrl);
+        FactoryDefaults.add(s, arIri, RDF.TYPE, DCTERMS.RIGHTS_STATEMENT, baseUrl);
+        FactoryDefaults.add(s, arIri, DCTERMS.DESCRIPTION, l(accessRightsDescription), baseUrl);
+        // Publisher
+        IRI publisherIri = i(persistentUrl + "#publisher");
+        FactoryDefaults.add(s, DCTERMS.PUBLISHER, publisherIri, baseUrl);
+        FactoryDefaults.add(s, publisherIri, RDF.TYPE, FOAF.AGENT, baseUrl);
+        FactoryDefaults.add(s, publisherIri, FOAF.NAME, l("Default Publisher"), baseUrl);
+        return s;
+    }
+
+    public static List<Statement> fdpStatements(String persistentUrl, IRI license, IRI language, String accessRightsDescription) {
+        List<Statement> s = new ArrayList<>();
+        IRI baseUrl = i(persistentUrl);
+        FactoryDefaults.add(s, RDF.TYPE, FDP.FAIRDATAPOINT, baseUrl);
+        FactoryDefaults.add(s, RDF.TYPE, FDP.METADATASERVICE, baseUrl);
+        FactoryDefaults.add(s, RDF.TYPE, DCAT.DATA_SERVICE, baseUrl);
+        FactoryDefaults.add(s, RDF.TYPE, DCAT.RESOURCE, baseUrl);
+        FactoryDefaults.add(s, DCTERMS.TITLE, l("My FAIR Data Point"), baseUrl);
+        FactoryDefaults.add(s, RDFS.LABEL, l("My FAIR Data Point"), baseUrl);
+        FactoryDefaults.add(s, DCTERMS.HAS_VERSION, l(1.0f), baseUrl);
+        FactoryDefaults.add(s, FDP.METADATAISSUED, l(OffsetDateTime.now()), baseUrl);
+        FactoryDefaults.add(s, FDP.METADATAMODIFIED, l(OffsetDateTime.now()), baseUrl);
+        FactoryDefaults.add(s, DCTERMS.LICENSE, license, baseUrl);
+        FactoryDefaults.add(s, DCTERMS.DESCRIPTION, l(LIPSUM_TEXT), baseUrl);
+        FactoryDefaults.add(s, DCTERMS.LANGUAGE, language, baseUrl);
+        // Identifier
+        IRI identifierIri = i(persistentUrl + "#identifier");
+        FactoryDefaults.add(s, FDP.METADATAIDENTIFIER, identifierIri, baseUrl);
+        FactoryDefaults.add(s, identifierIri, RDF.TYPE, DATACITE.IDENTIFIER, baseUrl);
+        FactoryDefaults.add(s, identifierIri, DCTERMS.IDENTIFIER, l(persistentUrl), baseUrl);
         // Access Rights
         IRI arIri = i(persistentUrl + "#accessRights");
         FactoryDefaults.add(s, DCTERMS.ACCESS_RIGHTS, arIri, baseUrl);
